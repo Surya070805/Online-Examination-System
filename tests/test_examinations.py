@@ -1,9 +1,10 @@
 """Functional test cases for core examination requirements (run with pytest)."""
 import pytest
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash
 from app import create_app
 from database import db
-from models import user, subject, chapter, quiz, questions, exam_attempt
+from models import user, subject, chapter, quiz, questions, exam_attempt, answer_record
 
 
 @pytest.fixture
@@ -64,6 +65,30 @@ def test_start_once_and_auto_evaluate(client):
     client.post(f'/exam/attempt/{attempt_id}', data={"q_1": "1", "q_2": "4", "score": "999"})
     attempt = exam_attempt.query.get(attempt_id)
     assert (attempt.score, attempt.total_questions, attempt.status) == (1, 2, 'submitted')
+
+
+def test_exam_attempt_is_created_only_once(client):
+    login(client)
+    assert client.post('/exam/1/start').status_code == 302
+    first_attempt = exam_attempt.query.filter_by(quiz_id=1, user_id=1).one()
+    assert client.post('/exam/1/start').status_code == 302
+    assert exam_attempt.query.filter_by(quiz_id=1, user_id=1).count() == 1
+    assert first_attempt.status == 'in_progress'
+
+
+def test_expired_attempt_is_submitted_without_late_answers(client):
+    login(client)
+    client.post('/exam/1/start')
+    attempt = exam_attempt.query.filter_by(quiz_id=1, user_id=1).one()
+    attempt.started_at = datetime.utcnow() - timedelta(minutes=6)
+    db.session.commit()
+
+    response = client.post(f'/exam/attempt/{attempt.id}', data={"q_1": "1", "q_2": "1"})
+    assert response.status_code == 302
+    db.session.refresh(attempt)
+    assert attempt.status == 'submitted'
+    assert attempt.score == 0
+    assert answer_record.query.filter_by(attempt_id=attempt.id).count() == 0
 
 
 def test_attempt_owner_enforced(client):
