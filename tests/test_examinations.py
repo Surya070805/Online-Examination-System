@@ -33,6 +33,28 @@ def test_authentication_required(client):
     assert client.get('/exams').status_code == 302
 
 
+def test_registration_stores_a_password_hash(client):
+    response = client.post('/register', data={
+        "username": "newstudent", "password": "not-plain-text",
+        "name": "New Student", "qualification": "Student", "dob": "2000-01-01",
+    })
+    assert response.status_code == 302
+    saved = user.query.filter_by(userName="newstudent").one()
+    assert saved.Password != "not-plain-text"
+    assert saved.Password.startswith(("pbkdf2:", "scrypt:"))
+
+
+def test_student_cannot_open_admin_dashboard(client):
+    login(client)
+    assert client.get('/admin_dash').status_code == 403
+
+
+def test_invalid_password_does_not_create_session(client):
+    response = client.post('/login', data={"username": "student", "password": "wrong"})
+    assert response.status_code == 401
+    assert client.get('/exams').status_code == 302
+
+
 def test_start_once_and_auto_evaluate(client):
     login(client)
     response = client.post('/exam/1/start')
