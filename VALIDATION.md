@@ -20,14 +20,13 @@
 | Check | Result |
 |---|---|
 | Python syntax compilation | Passed on 2026-11-19 with `python -m compileall -q app.py controllers.py models.py tests` |
-| Functional test suite | Collection blocked on 2026-11-19: `Flask-SQLAlchemy` is not installed in the active Python environment. Install `requirements.txt` and rerun `pytest`. |
+| Functional test suite | 10 passed on 2026-11-19 with the project-local `.venv`; one app-factory issue was fixed during the run. |
 
 ### Test run log
 
 | Date | Python / dependency environment | Passed | Failed | Notes |
 |---|---|---:|---:|---|
-| 2026-11-19 | Active environment; Flask-SQLAlchemy missing | — | — | Pytest stopped at collection before running cases. |
-| _Add each lab test run here_ | | | | |
+| 2026-11-19 | Project `.venv`; Python 3.13, Flask 3.1.3, Flask-SQLAlchemy 3.1.1, pytest 8.4.2 | 10 | 0 | `python -m compileall -q app.py controllers.py models.py tests` and `python -m pytest -q` both passed. |
 
 ## Release checklist
 
