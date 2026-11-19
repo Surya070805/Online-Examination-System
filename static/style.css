@@ -1,0 +1,21 @@
+*{
+    margin: 0px;
+}
+#form-body{
+    height:400px ;
+    width:600px ;
+    margin: auto;
+    border: 2px solid grey;
+    margin-top:150px;
+    padding: 5px;
+    border-radius: 5px;
+}
+#form-body2{
+    height:600px ;
+    width:600px ;
+    margin: auto;
+    border: 2px solid grey;
+    margin-top:70px;
+    padding: 5px;
+    border-radius: 5px;
+}

@@ -1,0 +1,16 @@
+# Python environments and generated files
+venv/
+.venv/
+pyvenv.cfg
+__pycache__/
+*.py[cod]
+
+# Local application databases may contain account data
+*.db
+*.sqlite
+*.sqlite3
+
+# Test and tool artifacts
+.pytest_cache/
+.coverage
+.env
