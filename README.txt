@@ -1,8 +1,5 @@
-Step1: Run-python app.py
-Step2: change the port from http://127.0.0.1:5000 to http://127.0.0.1:5000/login
-Step3: login to admin using 
-username: Admin123
-password: 123
-Step4: login to user using
-username: surya
-password: sur
+# Online Examination System (Quiz Master project)
+
+Use create_admin.py to securely create the first administrator; there is no shared default admin password. seed_demo_exam.py adds an optional demo exam for local testing.
+
+Run python app.py and open http://127.0.0.1:5000/login.
