@@ -91,6 +91,32 @@ def test_expired_attempt_is_submitted_without_late_answers(client):
     assert answer_record.query.filter_by(attempt_id=attempt.id).count() == 0
 
 
+def test_unanswered_questions_score_zero(client):
+    login(client)
+    client.post('/exam/1/start')
+    attempt = exam_attempt.query.filter_by(quiz_id=1, user_id=1).one()
+    response = client.post(f'/exam/attempt/{attempt.id}', data={})
+    assert response.status_code == 302
+    db.session.refresh(attempt)
+    assert attempt.score == 0
+    assert answer_record.query.filter_by(attempt_id=attempt.id, is_correct=True).count() == 0
+
+
+def test_submitted_result_is_immutable(client):
+    login(client)
+    client.post('/exam/1/start')
+    attempt = exam_attempt.query.filter_by(quiz_id=1, user_id=1).one()
+    client.post(f'/exam/attempt/{attempt.id}', data={"q_1": "1", "q_2": "4"})
+    db.session.refresh(attempt)
+    original_score = attempt.score
+
+    response = client.post(f'/exam/attempt/{attempt.id}', data={"q_1": "1", "q_2": "1"})
+    assert response.status_code == 302
+    db.session.refresh(attempt)
+    assert attempt.score == original_score == 1
+    assert answer_record.query.filter_by(attempt_id=attempt.id).count() == 2
+
+
 def test_attempt_owner_enforced(client):
     login(client)
     client.post('/exam/1/start')
