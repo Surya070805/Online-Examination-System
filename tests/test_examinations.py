@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from werkzeug.security import generate_password_hash
 from app import create_app
 from database import db
-from models import user, subject, chapter, quiz, questions, exam_attempt, answer_record
+from models import user, admin_table, subject, chapter, quiz, questions, exam_attempt, answer_record
 
 
 @pytest.fixture
@@ -15,6 +15,7 @@ def client(tmp_path):
     db.session.add(subject(id=1, name="Test subject")); db.session.flush()
     student = user(userName="student", Password=generate_password_hash("pass"), Full_Name="Test Student")
     db.session.add(student); db.session.flush()
+    db.session.add(admin_table(username="admin", Password=generate_password_hash("administrator-test-password")))
     ch = chapter(id=1, sub_id=1, name="Test", Description="")
     db.session.add(ch); db.session.flush()
     exam = quiz(id=1, chapter_id=ch.id, time_duration="5", remarks="Functional test", quesion_id=1)
@@ -123,3 +124,126 @@ def test_attempt_owner_enforced(client):
     attempt_id = exam_attempt.query.first().id
     client.get('/logout')
     assert client.get(f'/exam/result/{attempt_id}').status_code in (302, 403)
+
+
+def admin_login(client):
+    return client.post('/login', data={
+        "username": "admin",
+        "password": "administrator-test-password",
+    })
+
+
+def test_admin_can_create_subject_chapter_exam_and_question(client):
+    response = admin_login(client)
+    assert response.status_code == 302
+    assert response.location.endswith('/admin_dash')
+    assert client.get('/admin_dash').status_code == 200
+
+    assert client.get('/new_subject/admin').status_code == 200
+    response = client.post('/new_subject/admin', data={
+        "subj": "Software Engineering",
+        "desc": "Lab examination subject",
+    })
+    assert response.status_code == 302
+    created_subject = subject.query.filter_by(name="Software Engineering").one()
+
+    assert client.get('/new_chapter/admin').status_code == 200
+    response = client.post('/new_chapter/admin', data={
+        "chap_name": "Incremental Models",
+        "subj_id": str(created_subject.id),
+        "descrip": "Process model chapter",
+    })
+    assert response.status_code == 302
+    created_chapter = chapter.query.filter_by(name="Incremental Models").one()
+
+    response = client.post('/new_quiz/admin', data={
+        "remarks": "Admin workflow exam",
+        "chapter_id": str(created_chapter.id),
+        "date": "2026-12-01",
+        "duration": "15",
+    })
+    assert response.status_code == 302
+    created_exam = quiz.query.filter_by(remarks="Admin workflow exam").one()
+    assert client.get('/quiz_manag/admin').status_code == 200
+
+    response = client.post('/new_question/admin', data={
+        "quiz_id": str(created_exam.id),
+        "statement": "Which workflow was created?",
+        "opt1": "Incremental",
+        "opt2": "Random",
+        "opt3": "None",
+        "opt4": "Unknown",
+        "correct_opt": "1",
+    })
+    assert response.status_code == 302
+    created_question = questions.query.filter_by(quiz_id=created_exam.id).one()
+    assert created_question.chapter_id == created_chapter.id
+    assert created_question.correct_opt == "1"
+    assert b"Admin workflow exam" in client.get('/quiz_manag/admin').data
+    assert b"Software Engineering" in client.get('/admin_dash').data
+
+
+def test_admin_delete_chapter_removes_unused_exam_content(client):
+    admin_login(client)
+    parent = subject(name="Delete subject")
+    db.session.add(parent); db.session.flush()
+    section = chapter(sub_id=parent.id, name="Delete chapter")
+    db.session.add(section); db.session.flush()
+    exam = quiz(chapter_id=section.id, time_duration="10", remarks="Delete me", quesion_id=0)
+    db.session.add(exam); db.session.flush()
+    question = questions(
+        quiz_id=exam.id, chapter_id=section.id, question_statement="Delete question",
+        option1="A", option2="B", option3="C", option4="D", correct_opt="1",
+    )
+    db.session.add(question); db.session.commit()
+
+    question_id = question.id
+    response = client.post(f'/delete_chapter/admin/{section.id}')
+    assert response.status_code == 302
+    assert db.session.get(chapter, section.id) is None
+    assert db.session.get(quiz, exam.id) is None
+    assert db.session.get(questions, question_id) is None
+
+
+def test_admin_can_delete_question_and_exam(client):
+    admin_login(client)
+    exam = quiz(chapter_id=1, time_duration="10", remarks="Delete workflow exam", quesion_id=0)
+    db.session.add(exam); db.session.flush()
+    question = questions(
+        quiz_id=exam.id, chapter_id=1, question_statement="Delete workflow question",
+        option1="A", option2="B", option3="C", option4="D", correct_opt="1",
+    )
+    db.session.add(question); db.session.commit()
+    exam_id, question_id = exam.id, question.id
+
+    response = client.post(f'/delete_question/admin/{question_id}')
+    assert response.status_code == 302
+    assert db.session.get(questions, question_id) is None
+
+    response = client.post(f'/delete_quiz/admin/{exam_id}')
+    assert response.status_code == 302
+    assert db.session.get(quiz, exam_id) is None
+
+def test_admin_results_action_opens_results_page(client):
+    admin_login(client)
+    response = client.get('/scores')
+    assert response.status_code == 200
+    assert b"Exam results" in response.data
+    assert b"No results yet" in response.data
+
+def test_admin_cannot_change_question_bank_after_an_attempt(client):
+    admin_login(client)
+    db.session.add(exam_attempt(quiz_id=1, user_id=1, total_questions=2))
+    db.session.commit()
+
+    response = client.post('/new_question/admin', data={
+        "quiz_id": "1",
+        "statement": "Late question",
+        "opt1": "A",
+        "opt2": "B",
+        "opt3": "C",
+        "opt4": "D",
+        "correct_opt": "1",
+    })
+    assert response.status_code == 409
+    assert questions.query.filter_by(quiz_id=1).count() == 2

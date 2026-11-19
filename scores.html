@@ -1,74 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Scores | Quiz Master</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="static/style.css">
-</head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Exam results | Online Exams</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
 <body class="bg-light">
-
-  
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="/user_dash">Quiz Master</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/user_dash/{{usern}}/{{user_id}}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/scores/{{usern}}/{{ user_id }}">Scores</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/login">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-3">
-        <form action="search/{{usern}}" method="GET" class="d-flex">
-            <input class="form-control me-2" type="text" name="query" placeholder="Search Users, Subjects, Quizzes..." required>
-            <button class="btn btn-outline-primary" type="submit">Search</button>
-        </form>
-    </div>
-
-   
-    <div class="container mt-4">
-        <div class="card shadow">
-            <div class="card-body">
-                <h2 class="text-center text-primary">Quiz Scores</h2>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover text-center">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>ID</th>
-                                <th>No. of Questions</th>
-                                <th>Date</th>
-                                <th>Score</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for q in quizzes %}
-                                {% for score in user_score %}
-                                    {% if q.id == score.quiz_id %}
-                                        <tr>
-                                            <td>{{ score.quiz_id }}</td>
-                                            <td>{{ q.questions|length }}</td> 
-                                            <td>{{ q.date_of_quiz }}</td>
-                                            <td><strong>{{ score.total_scored }}</strong></td>
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary"><div class="container">
+  <a class="navbar-brand" href="{{ url_for('admin_dash') if admin_scores is defined else url_for('student_exams') }}">Online Exams</a>
+  {% if admin_scores is defined %}<div class="navbar-nav ms-auto align-items-lg-center gap-lg-2"><a class="nav-link" href="{{ url_for('admin_dash') }}">Subjects</a><a class="nav-link" href="{{ url_for('new_quiz_manag', usern=Admin) }}">Exams</a><a class="nav-link active" href="{{ url_for('get_scores') }}">Results</a><form action="{{ url_for('logout') }}" method="post"><button class="btn btn-outline-light btn-sm">Sign out</button></form></div>
+  {% else %}<div class="navbar-nav ms-auto"><a class="nav-link" href="{{ url_for('student_exams') }}">Exams</a><a class="nav-link active" href="{{ url_for('show_scores', usern=usern, user_id=user_id) }}">My results</a><form action="{{ url_for('logout') }}" method="post"><button class="btn btn-outline-light btn-sm">Sign out</button></form></div>{% endif %}
+</div></nav>
+<main class="container py-4 py-lg-5">
+  {% if admin_scores is defined %}
+  <div class="exam-kicker">Administrator workspace</div><h1 class="h2 fw-bold mb-1">Exam results</h1><p class="text-muted mb-4">Automatically evaluated submissions from all candidates.</p>
+  {% if admin_scores %}
+  <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Candidate</th><th>Exam</th><th>Score</th><th>Completed</th></tr></thead><tbody>
+  {% for score, candidate, exam in admin_scores %}<tr><td>{{ candidate.Full_Name }}<div class="small text-muted">{{ candidate.userName }}</div></td><td>{{ exam.remarks or ('Exam ' ~ exam.id) }}</td><td><strong>{{ score.total_scored }}</strong> / {{ exam.questions|length }}</td><td>{{ score.completed_at or score.time_stamp_of_attempt }}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  {% else %}<div class="card p-5 text-center"><h2 class="h4">No results yet</h2><p class="text-muted mb-0">Results will appear after students submit an exam.</p></div>{% endif %}
+  {% else %}
+  <div class="exam-kicker">Student portal</div><h1 class="h2 fw-bold mb-1">My results</h1><p class="text-muted mb-4">Your completed examination scores.</p>
+  <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Exam</th><th>Questions</th><th>Completed</th><th>Score</th></tr></thead><tbody>
+  {% set ns = namespace(found=false) %}
+  {% for exam in quizzes %}{% for result in user_score %}{% if exam.id == result.quiz_id %}{% set ns.found=true %}<tr><td>{{ exam.remarks or ('Exam ' ~ exam.id) }}</td><td>{{ exam.questions|length }}</td><td>{{ result.completed_at or result.time_stamp_of_attempt }}</td><td><strong>{{ result.total_scored }} / {{ exam.questions|length }}</strong></td></tr>{% endif %}{% endfor %}{% endfor %}
+  {% if not ns.found %}<tr><td colspan="4" class="text-center text-muted py-5">You have not completed an exam yet.</td></tr>{% endif %}
+  </tbody></table></div></div>
+  {% endif %}
+</main>
 </body>
 </html>

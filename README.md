@@ -24,3 +24,12 @@ Run `python -m compileall -q app.py controllers.py models.py tests` and `pytest`
 ## Software engineering process
 
 This lab project uses an incremental development model. See [SDLC.md](SDLC.md) for lifecycle and branch workflow, [INCREMENTS.md](INCREMENTS.md) for feature-to-requirement traceability, and [SRS.md](SRS.md) for product requirements. Each increment's scope and acceptance evidence are in `docs/increments/`.
+
+## Admin exam workflow
+
+1. Sign in with the administrator account created by create_admin.py.
+2. In Subjects, create a subject and add a chapter.
+3. Open Exams, create an exam for that chapter, and choose its date and duration.
+4. Use Add question to select the exam, enter four options, and select the correct option.
+5. Confirm the exam appears in exam management with its questions. Students can then register and open it from Available examinations.
+6. Use Results to review automatically generated submissions. Content with attempt history is protected from deletion.
