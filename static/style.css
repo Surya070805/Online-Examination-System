@@ -259,3 +259,81 @@ body.auth-page .card_style2 {
   }
   body.auth-page .card_style2 { margin: 190px 0 0; }
 }
+
+/* Keep the institute mark visible on the left and restore the supporting copy. */
+body.auth-page .container_login {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 440px);
+  gap: clamp(2rem, 7vw, 6rem);
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  padding: clamp(22px, 4vw, 64px);
+}
+body.auth-page .auth-intro {
+  display: block;
+  max-width: 520px;
+  align-self: center;
+  padding-left: clamp(0px, 1vw, 18px);
+}
+body.auth-page .auth-intro .auth-brand { display: none; }
+body.auth-page .auth-intro h1 {
+  max-width: 500px;
+  margin: 12px 0 18px;
+  color: #19365d;
+  font-size: clamp(2.7rem, 5vw, 4.4rem);
+  font-weight: 800;
+  line-height: 1.04;
+  text-shadow: 0 1px rgba(255,255,255,.55);
+}
+body.auth-page .auth-intro > p {
+  max-width: 440px;
+  color: #40566f;
+  font-size: 1.08rem;
+  text-shadow: 0 1px rgba(255,255,255,.6);
+}
+body.auth-page .auth-intro .auth-points li {
+  border-color: rgba(25,54,93,.13);
+  background: rgba(255,255,255,.78);
+}
+body.auth-page .card_style2 {
+  margin: 0;
+  justify-self: end;
+}
+body.auth-page .register-card {
+  padding: 1.35rem 1.55rem;
+}
+.register-heading { margin-bottom: 1rem; }
+.register-form .form-label {
+  margin-bottom: .25rem;
+  font-size: .82rem;
+}
+.register-form .form-control {
+  min-height: 40px;
+  padding: .48rem .7rem;
+  font-size: .92rem;
+}
+.register-form .btn { padding: .65rem .9rem; }
+@media (max-width: 760px) {
+  body.auth-page .container_login {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1rem;
+    padding: 22px 18px 30px;
+  }
+  body.auth-page .auth-intro {
+    max-width: 100%;
+    padding: 0;
+  }
+  body.auth-page .auth-intro h1 {
+    margin: 5px 0 8px;
+    font-size: clamp(2rem, 8vw, 2.7rem);
+  }
+  body.auth-page .auth-intro > p { margin-bottom: .6rem; font-size: .94rem; }
+  body.auth-page .auth-intro .auth-points { margin: 10px 0 0; gap: 7px; }
+  body.auth-page .auth-intro .auth-points li { padding: 6px 9px; font-size: .75rem; }
+  body.auth-page .register-card { padding: 1.15rem 1.2rem; }
+  body.register-page .auth-intro > p,
+  body.register-page .auth-intro .auth-points { display: none; }
+}
