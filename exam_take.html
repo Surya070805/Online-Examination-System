@@ -1,3 +1,63 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ exam.remarks or 'Examination' }}</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="bg-light"><main class="container py-4"><div class="d-flex justify-content-between align-items-center"><h1 class="h3">{{ exam.remarks or ('Examination ' ~ exam.id) }}</h1><p class="badge bg-danger fs-5" id="timer" aria-live="polite"></p></div><form id="exam-form" method="post">{% for question in questions %}<fieldset class="card card-body mb-3"><legend class="h5">Question {{ loop.index }} of {{ questions|length }}</legend><p>{{ question.question_statement }}</p>{% for value, option in [('1',question.option1),('2',question.option2),('3',question.option3),('4',question.option4)] %}<label class="form-check mb-1"><input class="form-check-input" type="radio" name="q_{{ question.id }}" value="{{ value }}"><span class="form-check-label">{{ option }}</span></label>{% endfor %}</fieldset>{% endfor %}<button class="btn btn-success" type="submit">Submit examination</button></form></main><script>
-const deadline = Date.parse({{ expires_at|tojson }}); const timer = document.getElementById('timer'); const form = document.getElementById('exam-form'); function tick(){const left=Math.max(0,Math.floor((deadline-Date.now())/1000));timer.textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');if(left===0)form.requestSubmit();}tick();setInterval(tick,1000);
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ exam.remarks or 'Examination' }} | Online Exams</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container exam-shell pb-5">
+    <header class="exam-topbar">
+      <div class="exam-topbar-inner">
+        <div>
+          <div class="exam-kicker">Timed assessment</div>
+          <h1 class="h4 fw-bold mb-0">{{ exam.remarks or ('Examination ' ~ exam.id) }}</h1>
+        </div>
+        <div class="text-end">
+          <div class="small text-muted mb-1">Time remaining</div>
+          <div id="timer" class="exam-timer" aria-live="polite">{{ exam.time_duration or 30 }}:00</div>
+        </div>
+      </div>
+    </header>
+    <p class="text-muted small mb-3">{{ questions|length }} questions · Your answers are evaluated after submission.</p>
+    <form id="exam-form" method="post">
+      {% for question in questions %}
+      <fieldset class="question-card">
+        <legend class="visually-hidden">Question {{ loop.index }}</legend>
+        <div class="question-number">Question {{ loop.index }} of {{ questions|length }}</div>
+        <p class="question-prompt">{{ question.question_statement }}</p>
+        {% for value, option in [('1', question.option1), ('2', question.option2), ('3', question.option3), ('4', question.option4)] %}
+        <label class="choice-option">
+          <input type="radio" name="q_{{ question.id }}" value="{{ value }}">
+          <span>{{ option }}</span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      {% endfor %}
+      <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mt-4">
+        <span class="text-muted small">Unanswered questions receive zero points.</span>
+        <button class="btn btn-success px-4" type="submit">Submit examination</button>
+      </div>
+    </form>
+  </main>
+  <script>
+    const deadline = Date.parse({{ expires_at|tojson }});
+    const timer = document.getElementById('timer');
+    const form = document.getElementById('exam-form');
+    let submitted = false;
+    function tick() {
+      const left = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+      timer.textContent = String(Math.floor(left / 60)).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0');
+      if (left === 0 && !submitted) {
+        submitted = true;
+        form.requestSubmit();
+      }
+    }
+    form.addEventListener('submit', () => { submitted = true; });
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
