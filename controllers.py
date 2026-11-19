@@ -2,11 +2,16 @@ from flask import Flask, render_template, request, redirect,url_for,session, abo
 from flask import current_app as app
 from sqlalchemy import func
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from models import *
+
+
+def utc_now():
+    # SQLite stores these UTC timestamps without timezone metadata.
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def login_required(role=None):
@@ -93,7 +98,7 @@ def student_exams():
 @app.route('/exam/<int:quiz_id>/start', methods=['POST'])
 @login_required('student')
 def exam_start(quiz_id):
-    exam = quiz.query.get_or_404(quiz_id)
+    exam = db.get_or_404(quiz, quiz_id)
     if exam_attempt.query.filter_by(quiz_id=quiz_id, user_id=session['user_id']).first():
         flash('An attempt has already been started or submitted for this exam.')
         return redirect(url_for('student_exams'))
@@ -110,18 +115,18 @@ def exam_start(quiz_id):
 @login_required('student')
 def exam_take(attempt_id):
     attempt = exam_attempt.query.filter_by(id=attempt_id, user_id=session['user_id']).first_or_404()
-    exam = quiz.query.get_or_404(attempt.quiz_id)
+    exam = db.get_or_404(quiz, attempt.quiz_id)
     if attempt.status != 'in_progress':
         return redirect(url_for('exam_result', attempt_id=attempt.id))
     duration = max(1, int(exam.time_duration or 30))
     expires = attempt.started_at + timedelta(minutes=duration)
-    if datetime.utcnow() >= expires:
-        attempt.score = 0; attempt.submitted_at = datetime.utcnow(); attempt.status = 'submitted'
+    if utc_now() >= expires:
+        attempt.score = 0; attempt.submitted_at = utc_now(); attempt.status = 'submitted'
         db.session.add(scores(quiz_id=attempt.quiz_id, user_id=attempt.user_id, total_scored=0, completed_at=attempt.submitted_at))
         db.session.commit()
         return redirect(url_for('exam_result', attempt_id=attempt.id))
     if request.method == 'POST':
-        now = datetime.utcnow()
+        now = utc_now()
         # Accept only option indexes from the posted form; compute every point on the server.
         posted = request.form
         for question in exam.questions:
@@ -143,10 +148,10 @@ def exam_take(attempt_id):
 @app.route('/exam/result/<int:attempt_id>')
 @login_required()
 def exam_result(attempt_id):
-    attempt = exam_attempt.query.get_or_404(attempt_id)
+    attempt = db.get_or_404(exam_attempt, attempt_id)
     if session.get('role') != 'admin' and attempt.user_id != session['user_id']:
         abort(403)
-    return render_template('exam_result.html', attempt=attempt, exam=quiz.query.get_or_404(attempt.quiz_id))
+    return render_template('exam_result.html', attempt=attempt, exam=db.get_or_404(quiz, attempt.quiz_id))
 
 @app.route('/new_chapter/<string:Admin>', methods=['GET', 'POST'])
 @login_required('admin')
@@ -322,7 +327,7 @@ def view_quiz(quiz_id,usern,user_id):
         abort(403)
     usern=usern
     users_id=user_id
-    q = quiz.query.get(quiz_id)
+    q = db.session.get(quiz, quiz_id)
     subj=subject.query.all()
     return render_template("view_quiz.html", quiz=q,sub=subj,usern=usern,user_id=users_id)
 
@@ -335,7 +340,7 @@ def start_quiz(user_id, usern,quiz_id, question_id):
     return redirect(url_for('student_exams'))
     question = questions.query.filter_by(id=question_id, quiz_id=quiz_id).first()
     total_questions = questions.query.filter_by(quiz_id=quiz_id).count()
-    quizs = quiz.query.get(quiz_id)
+    quizs = db.session.get(quiz, quiz_id)
     
     if not question:
         return redirect(f'/view_quiz/{usern}/{user_id}/{quiz_id}')  
@@ -445,8 +450,8 @@ def search_user(usern):
 @login_required('admin')
 def delete_chapter(chapter_id,Admin):
     Admin=Admin
-    chapters =chapter.query.get(chapter_id)
-    question=questions.query.get(chapter_id)
+    chapters = db.session.get(chapter, chapter_id)
+    question = db.session.get(questions, chapter_id)
     quiz.query.filter_by(chapter_id=chapter_id).delete()
     db.session.delete(chapters)
     db.session.delete(question)

@@ -1,6 +1,6 @@
 """Functional test cases for core examination requirements (run with pytest)."""
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from werkzeug.security import generate_password_hash
 from app import create_app
 from database import db
@@ -63,7 +63,7 @@ def test_start_once_and_auto_evaluate(client):
     attempt_id = exam_attempt.query.first().id
     assert client.post('/exam/1/start').status_code == 302
     client.post(f'/exam/attempt/{attempt_id}', data={"q_1": "1", "q_2": "4", "score": "999"})
-    attempt = exam_attempt.query.get(attempt_id)
+    attempt = db.session.get(exam_attempt, attempt_id)
     assert (attempt.score, attempt.total_questions, attempt.status) == (1, 2, 'submitted')
 
 
@@ -80,7 +80,7 @@ def test_expired_attempt_is_submitted_without_late_answers(client):
     login(client)
     client.post('/exam/1/start')
     attempt = exam_attempt.query.filter_by(quiz_id=1, user_id=1).one()
-    attempt.started_at = datetime.utcnow() - timedelta(minutes=6)
+    attempt.started_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=6)
     db.session.commit()
 
     response = client.post(f'/exam/attempt/{attempt.id}', data={"q_1": "1", "q_2": "1"})

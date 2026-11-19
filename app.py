@@ -27,19 +27,19 @@ def create_app(test_config=None):
         if "completed_at" not in columns:
             db.session.execute(text("ALTER TABLE scores ADD COLUMN completed_at DATETIME"))
             db.session.commit()
-    import sys
-    if "controllers" not in sys.modules:
-        import controllers  # noqa: F401
-    else:
-        # Route handlers use Flask's current_app proxy; copy their rules for additional
-        # factory-created apps (for example isolated functional test applications).
-        original = sys.modules.get("app")
-        source = getattr(original, "app", None)
-        if source is not None and source is not app:
-            for rule in source.url_map.iter_rules():
-                if rule.endpoint not in app.view_functions:
-                    app.view_functions[rule.endpoint] = source.view_functions[rule.endpoint]
-                    app.url_map.add(rule.empty())
+        import sys
+        if "controllers" not in sys.modules:
+            import controllers  # noqa: F401
+        else:
+            # Route handlers use Flask's current_app proxy; copy their rules for
+            # additional factory-created apps such as isolated functional tests.
+            original = sys.modules.get("app")
+            source = getattr(original, "app", None)
+            if source is not None and source is not app:
+                for rule in source.url_map.iter_rules():
+                    if rule.endpoint not in app.view_functions:
+                        app.view_functions[rule.endpoint] = source.view_functions[rule.endpoint]
+                        app.url_map.add(rule.empty())
     return app
 
 
