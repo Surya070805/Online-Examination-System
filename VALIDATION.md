@@ -28,6 +28,10 @@
 |---|---|---:|---:|---|
 | 2026-11-19 | Project `.venv`; Python 3.13, Flask 3.1.3, Flask-SQLAlchemy 3.1.1, pytest 8.4.2 | 10 | 0 | `python -m compileall -q app.py controllers.py models.py tests` and `python -m pytest -q` both passed. |
 
+## Setup workflow smoke check
+
+On 2026-11-19, created an administrator using a generated password, seeded the demo exam, confirmed administrator login and dashboard returned HTTP 200, confirmed the student exam list returned HTTP 200 with the demo exam, and reran the seed without duplication.
+
 ## Release checklist
 
 - [ ] All functional tests pass in the release environment.

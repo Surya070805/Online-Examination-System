@@ -9,7 +9,11 @@ Flask and SQLite application for administering multiple-choice exams. Students r
 3. Start the application: `python app.py`.
 4. Open `http://127.0.0.1:5000/login` and register a student account.
 
-The SQLite database is created in the project directory. Administrator accounts must be provisioned by the project owner; public administrator registration is not enabled.
+The SQLite database is created in the project directory. Public administrator registration is disabled.
+
+## First-time local setup
+
+Before starting the app, run python create_admin.py --generate to create an administrator with a one-time generated password. Save the password shown in the terminal. Then run python seed_demo_exam.py to add a clearly labeled three-question demo exam for student testing. Demo seeding is idempotent; admin creation refuses to overwrite an existing account.
 
 Set a unique `SECRET_KEY` before deployment and serve the app over HTTPS. The default secret supports local development only.
 
