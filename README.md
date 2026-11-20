@@ -1,6 +1,62 @@
 # Online Examination System
 
-Flask and SQLite application for administering multiple-choice exams. Students register and sign in, take one timed attempt per exam, and receive an automatically calculated result. Administrators use the subject, chapter, quiz, and question management screens.
+Flask and SQLite application for timed multiple-choice examinations. Students register, take published exams, and review their answer history. Faculty build courses and draft exams for assigned subjects. Administrators approve faculty, assign subjects, publish schedules, configure scoring defaults, and review institutional results and audit activity.
+
+## Project Structure
+
+The project follows a clean separation between backend application logic, frontend presentation layers (templates and static assets), documentation, and tests:
+
+```text
+Online-Examination-System/
+├── docs/                        # Specifications, lifecycle, and validation docs
+│   ├── INCREMENTS.md            # Traceability matrix across increments
+│   ├── SDLC.md                  # Software development lifecycle process
+│   ├── SRS.md                   # Software requirements specification
+│   ├── VALIDATION.md            # Validation reports and test runs
+│   └── increments/              # Increment-specific release notes
+├── static/                      # Frontend assets
+│   ├── css/
+│   │   └── style.css            # Stylesheet with design system
+│   └── images/
+│       └── auth-bg.jpg          # Portal branding & background graphics
+├── templates/                   # Frontend HTML views
+│   ├── admin/                   # Administrative dashboards & management views
+│   │   ├── admin_dashbord.html
+│   │   ├── admin_audit_logs.html
+│   │   ├── admin_settings.html
+│   │   ├── new_chapter.html
+│   │   ├── new_question.html
+│   │   ├── new_quiz.html
+│   │   ├── new_subject.html
+│   │   ├── quiz_management.html
+│   │   ├── scores.html
+│   │   └── search_admin.html
+│   ├── auth/                    # Authentication views
+│   │   ├── login.html
+│   │   └── register.html
+│   ├── user/                    # Student assessment views
+│       ├── exam_list.html
+│       ├── exam_result.html
+│       ├── exam_take.html
+│       ├── search_user.html
+│       ├── start_quiz.html
+│       ├── user_dashboard.html
+│       └── view_quiz.html
+│   └── teacher/                 # Faculty assessment and analytics dashboard
+│       └── teacher_dashboard.html
+├── tests/                       # Automated pytest suite
+│   └── test_examinations.py
+├── .vscode/                     # Workspace debug configurations
+│   └── launch.json
+├── app.py                       # Application entrypoint & Flask factory
+├── config.py                    # Environment and app configuration
+├── controllers.py               # Route controllers & view handlers
+├── database.py                  # SQLAlchemy instance & database setup
+├── models.py                    # Database models
+├── quizmaster.db                # SQLite database
+├── requirements.txt             # Python package dependencies
+└── README.md                    # Project documentation
+```
 
 ## Run locally
 
@@ -9,27 +65,14 @@ Flask and SQLite application for administering multiple-choice exams. Students r
 3. Start the application: `python app.py`.
 4. Open `http://127.0.0.1:5000/login` and register a student account.
 
-The SQLite database is created in the project directory. Public administrator registration is disabled.
-
-## First-time local setup
-
-Before starting the app, run python create_admin.py --generate to create an administrator with a one-time generated password. Save the password shown in the terminal. Then run python seed_demo_exam.py to add a clearly labeled three-question demo exam for student testing. Demo seeding is idempotent; admin creation refuses to overwrite an existing account.
+The SQLite database is created in the project directory. Public registration creates student accounts only; an administrator promotes faculty accounts and assigns their subjects. Administrator accounts are provisioned separately.
 
 Set a unique `SECRET_KEY` before deployment and serve the app over HTTPS. The default secret supports local development only.
 
 ## Validate
 
-Run `python -m compileall -q app.py controllers.py models.py tests` and `pytest`. Functional cases are in `tests/test_examinations.py`; execution history and acceptance checks are in [VALIDATION.md](VALIDATION.md).
+Run `python -m compileall -q app.py config.py controllers.py database.py models.py tests` and `pytest`. Functional cases are in `tests/test_examinations.py`; execution history and acceptance checks are in [docs/VALIDATION.md](docs/VALIDATION.md).
 
 ## Software engineering process
 
-This lab project uses an incremental development model. See [SDLC.md](SDLC.md) for lifecycle and branch workflow, [INCREMENTS.md](INCREMENTS.md) for feature-to-requirement traceability, and [SRS.md](SRS.md) for product requirements. Each increment's scope and acceptance evidence are in `docs/increments/`.
-
-## Admin exam workflow
-
-1. Sign in with the administrator account created by create_admin.py.
-2. In Subjects, create a subject and add a chapter.
-3. Open Exams, create an exam for that chapter, and choose its date and duration.
-4. Use Add question to select the exam, enter four options, and select the correct option.
-5. Confirm the exam appears in exam management with its questions. Students can then register and open it from Available examinations.
-6. Use Results to review automatically generated submissions. Content with attempt history is protected from deletion.
+This lab project uses an incremental development model. See [docs/SDLC.md](docs/SDLC.md) for lifecycle and branch workflow, [docs/INCREMENTS.md](docs/INCREMENTS.md) for feature-to-requirement traceability, and [docs/SRS.md](docs/SRS.md) for product requirements. Each increment's scope and acceptance evidence are in `docs/increments/`.
