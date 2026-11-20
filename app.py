@@ -1,31 +1,51 @@
 """Quiz Master / Online Examination System Flask entry point."""
 import os
-from datetime import timedelta
+import jinja2
 from flask import Flask
+from config import Config
 from database import db
 
 
 def create_app(test_config=None):
-    app = Flask(__name__, template_folder=".", static_folder="static")
-    app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY", "development-only-change-me"),
-        SQLALCHEMY_DATABASE_URI="sqlite:///" + os.path.join(os.path.abspath(os.path.dirname(__file__)), "quizmaster.db"),
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
-        SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SAMESITE="Lax",
-    )
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    app = Flask(__name__, template_folder="templates", static_folder="static")
+    app.config.from_object(Config)
+
+    # Multi-path template loader to cleanly support both modular subfolders
+    # (templates/auth, templates/admin, templates/user) and top-level template names.
+    app.jinja_loader = jinja2.ChoiceLoader([
+        jinja2.FileSystemLoader(os.path.join(base_dir, "templates")),
+        jinja2.FileSystemLoader(os.path.join(base_dir, "templates", "auth")),
+        jinja2.FileSystemLoader(os.path.join(base_dir, "templates", "admin")),
+        jinja2.FileSystemLoader(os.path.join(base_dir, "templates", "teacher")),
+        jinja2.FileSystemLoader(os.path.join(base_dir, "templates", "user")),
+        jinja2.FileSystemLoader(base_dir),
+    ])
+
     if test_config:
         app.config.update(test_config)
     db.init_app(app)
     with app.app_context():
-        from models import user, admin_table, subject, chapter, quiz, questions, scores, exam_attempt, answer_record
+        from models import (
+            user, admin_table, subject, chapter, quiz, questions, scores,
+            exam_attempt, answer_record, teacher_subject_assignment,
+            audit_log, system_setting,
+        )
         db.create_all()
-        # Upgrade the legacy score table in-place; old quiz data remains available.
+        # Upgrade the legacy tables in-place.
         from sqlalchemy import inspect, text
         columns = {c["name"] for c in inspect(db.engine).get_columns("scores")}
         if "completed_at" not in columns:
             db.session.execute(text("ALTER TABLE scores ADD COLUMN completed_at DATETIME"))
+            db.session.commit()
+        user_columns = {c["name"] for c in inspect(db.engine).get_columns("user")}
+        if "role" not in user_columns:
+            db.session.execute(text("ALTER TABLE user ADD COLUMN role VARCHAR(20) DEFAULT 'student'"))
+            db.session.commit()
+        quiz_columns = {c["name"] for c in inspect(db.engine).get_columns("quiz")}
+        if "published" not in quiz_columns:
+            # Preserve existing exam availability; new exams are created as drafts.
+            db.session.execute(text("ALTER TABLE quiz ADD COLUMN published BOOLEAN NOT NULL DEFAULT 1"))
             db.session.commit()
         import sys
         if "controllers" not in sys.modules:

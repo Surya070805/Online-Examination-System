@@ -1,0 +1,339 @@
+:root {
+  --exam-navy: #19365d;
+  --exam-blue: #315b92;
+  --exam-orange: #e8793d;
+  --exam-ink: #203047;
+  --exam-muted: #68788e;
+  --exam-canvas: #f3f6fb;
+  --exam-border: #e3e9f2;
+  --bs-primary: var(--exam-navy);
+  --bs-primary-rgb: 25, 54, 93;
+  --bs-success: var(--exam-orange);
+  --bs-success-rgb: 232, 121, 61;
+  --bs-link-color: var(--exam-blue);
+  --bs-link-hover-color: var(--exam-orange);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--exam-ink);
+  background: var(--exam-canvas);
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.55;
+}
+.bg-light { background-color: var(--exam-canvas) !important; }
+a { text-underline-offset: 3px; }
+h1, h2, h3, h4, h5 { color: var(--exam-navy); letter-spacing: -.025em; }
+.text-primary { color: var(--exam-navy) !important; }
+.text-secondary, .text-muted { color: var(--exam-muted) !important; }
+.bg-primary { background-color: var(--exam-navy) !important; }
+.navbar {
+  background: #fff !important;
+  border-bottom: 1px solid var(--exam-border);
+}
+.navbar.navbar-dark.bg-primary { background: var(--exam-navy) !important; }
+.navbar-brand { color: var(--exam-navy) !important; font-weight: 800; letter-spacing: -.02em; }
+.navbar-dark .navbar-brand, .navbar-dark .nav-link { color: #fff !important; }
+.navbar .nav-link { font-weight: 600; transition: color .15s ease; }
+.navbar .nav-link:hover, .navbar .nav-link.active { color: var(--exam-orange) !important; }
+.navbar-dark .nav-link:hover, .navbar-dark .nav-link.active { color: #ffb27d !important; }
+.card {
+  border: 1px solid var(--exam-border);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(25, 54, 93, .07);
+}
+.card-title, .card-header { color: var(--exam-navy); }
+.btn {
+  border-radius: 9px;
+  font-weight: 700;
+  transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary {
+  --bs-btn-bg: var(--exam-navy);
+  --bs-btn-border-color: var(--exam-navy);
+  --bs-btn-hover-bg: #244b7b;
+  --bs-btn-hover-border-color: #244b7b;
+}
+.btn-success {
+  --bs-btn-bg: var(--exam-orange);
+  --bs-btn-border-color: var(--exam-orange);
+  --bs-btn-hover-bg: #cf642d;
+  --bs-btn-hover-border-color: #cf642d;
+  color: #fff;
+}
+.form-control, .form-select {
+  border-color: #d6deea;
+  border-radius: 9px;
+  padding: .7rem .85rem;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--exam-blue);
+  box-shadow: 0 0 0 .2rem rgba(49, 91, 146, .15);
+}
+.container_login {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 440px);
+  gap: clamp(2rem, 8vw, 7rem);
+  align-items: center;
+  width: min(1120px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 56px 32px;
+}
+.auth-page {
+  min-height: 100vh;
+  background: url('../images/auth-bg.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+.auth-intro {
+  max-width: 510px;
+  padding-top: 175px;
+}
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 42px;
+  color: var(--exam-navy);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.auth-brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--exam-navy);
+  color: white;
+  font-size: .95rem;
+  letter-spacing: .03em;
+}
+.auth-brand em { color: var(--exam-orange); font-style: normal; }
+.auth-eyebrow {
+  color: var(--exam-orange);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.auth-intro h1 { max-width: 500px; margin: 12px 0 18px; font-size: clamp(2.5rem, 5vw, 4.4rem); font-weight: 800; line-height: 1.05; }
+.auth-intro > p { max-width: 430px; color: var(--exam-muted); font-size: 1.08rem; }
+.auth-points { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; padding: 0; list-style: none; }
+.auth-points li {
+  padding: 8px 12px;
+  border: 1px solid rgba(25, 54, 93, .1);
+  border-radius: 999px;
+  background: rgba(255,255,255,.74);
+  color: var(--exam-navy);
+  font-size: .85rem;
+  font-weight: 700;
+}
+.card_style2 {
+  width: 100%;
+  max-width: 440px;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border: 1px solid rgba(227, 233, 242, .9);
+  border-radius: 20px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 24px 65px rgba(25, 54, 93, .13);
+}
+.card_style2 .form-label { color: var(--exam-ink); font-size: .9rem; }
+.card_style2 .btn { padding: .75rem 1rem; }
+.exam-list-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.8rem;
+}
+.exam-kicker { color: var(--exam-orange); font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.exam-card { height: 100%; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease; }
+.exam-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(25, 54, 93, .12); }
+.exam-card .card-body { padding: 1.5rem; }
+.exam-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 1.1rem 0 1.35rem; }
+.exam-meta span { padding: 6px 10px; border-radius: 999px; background: #f0f4fa; color: var(--exam-muted); font-size: .82rem; font-weight: 700; }
+.exam-shell { max-width: 920px; }
+.exam-topbar { position: sticky; top: 0; z-index: 10; padding: 15px 0; background: rgba(243,246,251,.94); backdrop-filter: blur(12px); }
+.exam-topbar-inner { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.exam-timer {
+  display: inline-flex;
+  min-width: 112px;
+  justify-content: center;
+  padding: 9px 14px;
+  border: 1px solid rgba(232,121,61,.24);
+  border-radius: 11px;
+  background: #fff6f0;
+  color: #b65325;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.question-card { margin-bottom: 16px; padding: clamp(1.15rem, 3vw, 1.7rem); border: 1px solid var(--exam-border); border-radius: 15px; background: #fff; }
+.question-number { margin-bottom: .55rem; color: var(--exam-orange); font-size: .76rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.question-prompt { margin-bottom: 1.15rem; color: var(--exam-ink); font-size: 1.08rem; font-weight: 650; }
+.choice-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 8px 0;
+  padding: 11px 13px;
+  border: 1px solid var(--exam-border);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.choice-option:hover { border-color: #a8bad3; background: #f8faff; }
+.choice-option:has(input:checked) { border-color: var(--exam-blue); background: #f1f6ff; }
+.choice-option input { margin-top: .28rem; accent-color: var(--exam-blue); }
+.result-card { max-width: 620px; overflow: hidden; }
+.result-score {
+  display: grid;
+  width: 150px;
+  height: 150px;
+  margin: 1.2rem auto;
+  place-items: center;
+  border: 9px solid #e9eff8;
+  border-top-color: var(--exam-orange);
+  border-radius: 50%;
+  color: var(--exam-navy);
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+@media (max-width: 760px) {
+  .container_login { grid-template-columns: 1fr; gap: 28px; padding: 34px 20px; align-content: center; }
+  .auth-intro { max-width: 440px; }
+  .auth-brand { margin-bottom: 18px; }
+  .auth-intro h1 { font-size: clamp(2.1rem, 9vw, 3rem); }
+  .auth-points { margin-top: 18px; }
+  .card_style2 { max-width: none; }
+  .exam-list-header { align-items: flex-start; flex-direction: column; }
+  .exam-topbar-inner { align-items: flex-start; }
+}
+
+/* NIT Andhra Pradesh login backdrop */
+body.auth-page {
+  min-height: 100vh;
+  background-color: #edf5fc;
+  background-image:
+    linear-gradient(90deg, rgba(244, 249, 255, .04) 0%, rgba(244, 249, 255, .04) 48%, rgba(244, 249, 255, .18) 100%),
+    url("/static/auth-bg.jpg");
+  background-size: cover;
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+body.auth-page .container_login {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  padding: clamp(20px, 5vw, 76px);
+}
+body.auth-page .auth-intro { display: none; }
+body.auth-page .card_style2 {
+  width: min(100%, 440px);
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: clamp(0px, 4vw, 64px);
+  border: 1px solid rgba(255,255,255,.78);
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 24px 70px rgba(23, 59, 99, .2);
+  backdrop-filter: blur(10px);
+}
+@media (max-width: 760px) {
+  body.auth-page {
+    background-position: left top;
+    background-attachment: scroll;
+    background-size: auto 100vh;
+  }
+  body.auth-page .container_login {
+    justify-content: center;
+    padding: 28px 18px;
+  }
+  body.auth-page .card_style2 { margin: 190px 0 0; }
+}
+
+/* Keep the institute mark visible on the left and restore the supporting copy. */
+body.auth-page .container_login {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 440px);
+  gap: clamp(2rem, 7vw, 6rem);
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  padding: clamp(22px, 4vw, 64px);
+}
+body.auth-page .auth-intro {
+  display: block;
+  max-width: 520px;
+  align-self: center;
+  padding-left: clamp(0px, 1vw, 18px);
+}
+body.auth-page .auth-intro .auth-brand { display: none; }
+body.auth-page .auth-intro h1 {
+  max-width: 500px;
+  margin: 12px 0 18px;
+  color: #19365d;
+  font-size: clamp(2.7rem, 5vw, 4.4rem);
+  font-weight: 800;
+  line-height: 1.04;
+  text-shadow: 0 1px rgba(255,255,255,.55);
+}
+body.auth-page .auth-intro > p {
+  max-width: 440px;
+  color: #40566f;
+  font-size: 1.08rem;
+  text-shadow: 0 1px rgba(255,255,255,.6);
+}
+body.auth-page .auth-intro .auth-points li {
+  border-color: rgba(25,54,93,.13);
+  background: rgba(255,255,255,.78);
+}
+body.auth-page .card_style2 {
+  margin: 0;
+  justify-self: end;
+}
+body.auth-page .register-card {
+  padding: 1.35rem 1.55rem;
+}
+.register-heading { margin-bottom: 1rem; }
+.register-form .form-label {
+  margin-bottom: .25rem;
+  font-size: .82rem;
+}
+.register-form .form-control {
+  min-height: 40px;
+  padding: .48rem .7rem;
+  font-size: .92rem;
+}
+.register-form .btn { padding: .65rem .9rem; }
+@media (max-width: 760px) {
+  body.auth-page .container_login {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1rem;
+    padding: 22px 18px 30px;
+  }
+  body.auth-page .auth-intro {
+    max-width: 100%;
+    padding: 0;
+  }
+  body.auth-page .auth-intro h1 {
+    margin: 5px 0 8px;
+    font-size: clamp(2rem, 8vw, 2.7rem);
+  }
+  body.auth-page .auth-intro > p { margin-bottom: .6rem; font-size: .94rem; }
+  body.auth-page .auth-intro .auth-points { margin: 10px 0 0; gap: 7px; }
+  body.auth-page .auth-intro .auth-points li { padding: 6px 9px; font-size: .75rem; }
+  body.auth-page .register-card { padding: 1.15rem 1.2rem; }
+  body.register-page .auth-intro > p,
+  body.register-page .auth-intro .auth-points { display: none; }
+}

@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty Dashboard | Online Examination System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('teacher_dash') }}">
+      <span class="badge bg-light text-primary fw-bold">Faculty</span>
+      <span>Online Exams</span>
+    </a>
+    <div class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+      <a class="nav-link active" href="{{ url_for('teacher_dash') }}">Dashboard</a>
+      <a class="nav-link" href="{{ url_for('new_quiz_manag', usern=Admin) }}">Exam Builder</a>
+      <a class="nav-link" href="{{ url_for('get_scores') }}">Student Scores</a>
+      <span class="text-white-50 small d-none d-lg-inline">|</span>
+      <span class="text-white small fw-bold">{{ full_name or Admin }}</span>
+      <form action="{{ url_for('logout') }}" method="post" class="d-inline">
+        <button class="btn btn-outline-light btn-sm" type="submit">Sign out</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4 py-lg-5">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category if category in ['success','warning','danger','info'] else 'info' }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Hero Header -->
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <div class="exam-kicker">Faculty & Instructor Workspace</div>
+      <h1 class="h2 fw-bold mb-1">Welcome, {{ full_name or Admin }}</h1>
+      <p class="text-muted mb-0">Manage only your assigned subjects, build examinations, and review your students’ results.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary" href="{{ url_for('new_question', Admin=Admin) }}">+ Add Question</a>
+      <a class="btn btn-primary" href="{{ url_for('new_quiz', Admin=Admin) }}">+ Create Exam</a>
+      <a class="btn btn-success" href="{{ url_for('new_chapter', Admin=Admin) }}">+ Add Chapter</a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Assigned Subjects</div>
+        <div class="display-6 fw-bold text-primary mt-1">{{ subjects|length }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Chapters / Units</div>
+        <div class="display-6 fw-bold text-primary mt-1">{{ total_chapters }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Question Bank</div>
+        <div class="display-6 fw-bold text-primary mt-1">{{ total_questions }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Scheduled Exams</div>
+        <div class="display-6 fw-bold text-primary mt-1">{{ quizzes|length }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Average Score</div>
+        <div class="display-6 fw-bold text-success mt-1">{{ average_score ~ '%' if average_score is not none else '—' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="row g-4">
+    <!-- Left Column: Courses & Chapters -->
+    <div class="col-lg-7">
+      <section class="card mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h2 class="h5 fw-bold mb-0">Course Chapters & Question Bank</h2>
+          <span class="small text-muted">Subject access is assigned by an administrator</span>
+        </div>
+        <div class="card-body p-4">
+          {% if subjects %}
+            <div class="accordion" id="subjectAccordion">
+              {% for subj in subjects %}
+              <div class="accordion-item mb-3 border rounded">
+                <h3 class="accordion-header" id="heading{{ subj.id }}">
+                  <button class="accordion-button {{ 'collapsed' if not loop.first else '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ subj.id }}">
+                    <div class="w-100 d-flex justify-content-between align-items-center pe-3">
+                      <div>
+                        <strong>{{ subj.name }}</strong>
+                        <div class="small text-muted">{{ subj.chapters|length }} chapters</div>
+                      </div>
+                    </div>
+                  </button>
+                </h3>
+                <div id="collapse{{ subj.id }}" class="accordion-collapse collapse {{ 'show' if loop.first else '' }}">
+                  <div class="accordion-body">
+                    <p class="small text-muted mb-3">{{ subj.Description or 'No description provided.' }}</p>
+                    {% if subj.chapters %}
+                    <div class="table-responsive">
+                      <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Chapter</th>
+                            <th class="text-center">Questions</th>
+                            <th class="text-end">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for chap in subj.chapters %}
+                          <tr>
+                            <td>
+                              <span class="fw-bold">{{ chap.name }}</span>
+                              <div class="small text-muted text-truncate" style="max-width: 250px;">{{ chap.Description or '' }}</div>
+                            </td>
+                            <td class="text-center">
+                              <span class="badge bg-secondary">{{ chap.questions|length }}</span>
+                            </td>
+                            <td class="text-end">
+                              <form action="{{ url_for('delete_chapter', Admin=Admin, chapter_id=chap.id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this chapter and unattempted exams?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">Delete</button>
+                              </form>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    {% else %}
+                    <div class="text-muted small">No chapters added yet.</div>
+                    {% endif %}
+                    <div class="mt-3 text-end">
+                      <a href="{{ url_for('new_chapter', Admin=Admin) }}" class="btn btn-sm btn-outline-primary">+ Add Chapter</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted">No subjects assigned yet. Ask an administrator to assign a subject to your faculty account.</p>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Column: Active Exams & Submissions -->
+    <div class="col-lg-5">
+      <!-- Active Exams -->
+      <section class="card mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h2 class="h5 fw-bold mb-0">Active Examinations</h2>
+          <a class="btn btn-sm btn-primary" href="{{ url_for('new_quiz', Admin=Admin) }}">+ Create Exam</a>
+        </div>
+        <div class="card-body p-0">
+          {% if quizzes %}
+          <div class="list-group list-group-flush">
+            {% for exam in quizzes %}
+            <div class="list-group-item p-3">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <span class="fw-bold">{{ exam.remarks or ('Exam #' ~ exam.id) }}</span>
+                <span class="badge bg-primary">{{ exam.time_duration or 30 }} mins</span>
+              </div>
+              <div class="small text-muted mb-2">
+                {{ exam.questions|length }} questions · {{ exam.chapter.name if exam.chapter else 'General' }}
+              </div>
+              <div class="d-flex gap-2">
+                <a href="{{ url_for('new_quiz_manag', usern=Admin) }}" class="btn btn-sm btn-outline-secondary py-0">Manage Exam</a>
+                <a href="{{ url_for('new_question', Admin=Admin) }}" class="btn btn-sm btn-outline-primary py-0">+ Question</a>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted">No exams created yet.</div>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- Recent Submissions -->
+      <section class="card">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h2 class="h5 fw-bold mb-0">Recent Submissions</h2>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('get_scores') }}">All Scores</a>
+        </div>
+        <div class="card-body p-0">
+          {% if recent_scores %}
+          <div class="list-group list-group-flush">
+            {% for sc in recent_scores %}
+            <div class="list-group-item p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong class="d-block">{{ sc.user.Full_Name if sc.user else 'Student' }}</strong>
+                  <span class="small text-muted">{{ sc.quiz.remarks if sc.quiz else 'Assessment' }}</span>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-success fs-6">{{ sc.total_scored }} pts</span>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted">No student submissions yet.</div>
+          {% endif %}
+        </div>
+      </section>
+      <section class="card mt-4">
+        <div class="card-header bg-white py-3"><h2 class="h5 fw-bold mb-0">Question difficulty (attempted questions)</h2></div>
+        {% if question_difficulty %}
+        <div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>Question</th><th>Responses</th><th>Correct</th></tr></thead><tbody>
+          {% for row in question_difficulty %}<tr><td>{{ row.question.question_statement }}</td><td>{{ row.responses }}</td><td><span class="badge {{ 'text-bg-success' if row.correct_rate >= 70 else ('text-bg-warning' if row.correct_rate >= 40 else 'text-bg-danger') }}">{{ row.correct_rate }}%</span></td></tr>{% endfor %}
+        </tbody></table></div>
+        {% else %}<div class="p-4 small text-muted">Question statistics appear after students submit assigned exams.</div>{% endif %}
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

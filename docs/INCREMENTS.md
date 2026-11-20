@@ -10,6 +10,7 @@ Each increment adds value to the previous one. The existing quiz application is 
 | 3 — Exam delivery | `increment/03-exam-delivery` | One attempt per student, server-started timer, exam interface | A student can start once; a second start is rejected; time limit is server checked |
 | 4 — Evaluation and results | `increment/04-automated-evaluation` | Server-side answer checking and persisted result display | Correct, incorrect, unanswered, and forged score inputs yield expected totals |
 | 5 — Verification and release | `increment/05-validation-release` | Functional test suite, traceability, run instructions, release checklist | Tests pass; clean `main` can be started from the documented setup |
+| 6 — Three-tier faculty governance | `increment/06-three-tier-rbac` | Student, assigned faculty, and dean roles; faculty dashboards; subject assignment; exam approval; institutional analytics, settings, and audit logs | Registration cannot self-grant faculty; faculty access is assignment-scoped; existing schema migrates and the 22-case suite passes |
 
 ## Requirement-to-test map
 
@@ -22,7 +23,12 @@ Each increment adds value to the previous one. The existing quiz application is 
 | FR-05 Evaluation | `test_start_once_and_auto_evaluate` |
 | FR-06 Results | result route and persisted attempt assertions |
 | FR-07 Time limit | expired-attempt functional test |
-| FR-08 Content management | existing administrator subject, chapter, quiz, and question workflows |
+| FR-08 Content management | `test_admin_assigns_subject_teacher_builds_draft_and_admin_publishes` |
+| FR-09 Three-tier authorization | `test_public_registration_cannot_self_assign_faculty_role`; `test_admin_role_demotion_revokes_existing_teacher_session` |
+| FR-10 Subject assignment | `test_teacher_only_sees_and_manages_assigned_subjects` |
+| FR-11 Exam approval | `test_admin_assigns_subject_teacher_builds_draft_and_admin_publishes` |
+| FR-12 Institutional analytics | `test_teacher_only_sees_and_manages_assigned_subjects`; `test_admin_pass_fail_metrics_follow_system_threshold` |
+| FR-13 Governance | `test_admin_settings_are_validated_and_audited` |
 
 ## Definition of done for an increment
 

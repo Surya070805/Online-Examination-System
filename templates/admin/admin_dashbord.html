@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dean / Admin Dashboard | Online Exams</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('admin_dash') }}">
+      <span class="badge bg-warning text-dark fw-bold">Dean / Admin</span>
+      <span>Online Exams</span>
+    </a>
+    <div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+      <a class="nav-link active" href="{{ url_for('admin_dash') }}">Governance</a>
+      <a class="nav-link" href="{{ url_for('new_quiz_manag', usern=Admin) }}">Exams</a>
+      <a class="nav-link" href="{{ url_for('get_scores') }}">Results</a>
+      <a class="nav-link" href="{{ url_for('admin_audit_logs') }}">Audit log</a>
+      <a class="nav-link" href="{{ url_for('admin_settings') }}">Settings</a>
+      <form action="{{ url_for('logout') }}" method="post"><button class="btn btn-outline-light btn-sm">Sign out</button></form>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4 py-lg-5">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category if category in ['success','warning','danger','info'] else 'info' }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <div class="exam-kicker">Academic Administration & Governance</div>
+      <h1 class="h2 fw-bold mb-1">Dean Portal · Welcome, {{ Admin }}</h1>
+      <p class="text-muted mb-0">Oversee institutional curricula, manage faculty roles, and inspect examinations.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{{ url_for('new_quiz_manag', usern=Admin) }}">Manage exams</a>
+      <a class="btn btn-success" href="{{ url_for('new_subject', Admin=Admin) }}">+ Add subject</a>
+    </div>
+  </div>
+
+  <!-- Executive Institutional Metrics -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Enrolled Students</div>
+        <div class="display-6 fw-bold text-primary mt-1">{{ students_count }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Faculty Members</div>
+        <div class="display-6 fw-bold text-success mt-1">{{ teachers_count }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Academic Subjects</div>
+        <div class="display-6 fw-bold text-primary mt-1">{{ subjects|length }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 p-3">
+        <div class="text-muted small fw-bold text-uppercase">Total Examinations</div>
+        <div class="display-6 fw-bold text-primary mt-1">{{ exams_count }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3"><div class="card h-100 p-3"><div class="text-muted small fw-bold text-uppercase">Submitted Attempts</div><div class="display-6 fw-bold text-primary mt-1">{{ total_submissions }}</div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card h-100 p-3"><div class="text-muted small fw-bold text-uppercase">Passes · ≥ {{ pass_mark }}%</div><div class="display-6 fw-bold text-success mt-1">{{ pass_count }}</div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card h-100 p-3"><div class="text-muted small fw-bold text-uppercase">Below Passing Threshold</div><div class="display-6 fw-bold text-warning mt-1">{{ fail_count }}</div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card h-100 p-3"><div class="text-muted small fw-bold text-uppercase">System Status</div><div class="h3 fw-bold text-success mt-3">Operational</div></div></div>
+  </div>
+
+  <!-- Navigation Tabs for Dean Workspace -->
+  <ul class="nav nav-pills mb-4" id="deanTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active fw-bold" id="curriculum-tab" data-bs-toggle="pill" data-bs-target="#curriculum" type="button" role="tab">Academic Subjects & Curricula</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link fw-bold" id="users-tab" data-bs-toggle="pill" data-bs-target="#users" type="button" role="tab">Faculty & Student Accounts (RBAC)</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="deanTabsContent">
+    <!-- Tab 1: Curriculum -->
+    <div class="tab-pane fade show active" id="curriculum" role="tabpanel">
+      {% if subjects %}
+      <div class="row g-4">
+        {% for subj in subjects %}
+        <div class="col-lg-6">
+          <section class="card h-100">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                  <div class="exam-kicker">Subject {{ subj.id }}</div>
+                  <h2 class="h4 card-title mb-1">{{ subj.name }}</h2>
+                  <p class="text-muted small mb-0">{{ subj.Description or 'No description provided.' }}</p>
+                </div>
+                <span class="badge text-bg-light">Faculty-managed content</span>
+              </div>
+              {% if subj.chapters %}
+              <div class="table-responsive mt-3">
+                <table class="table align-middle mb-0">
+                  <thead><tr><th>Chapter</th><th>Questions</th><th class="text-end">Owner</th></tr></thead>
+                  <tbody>
+                  {% for chap in subj.chapters %}
+                    <tr>
+                      <td>
+                        <strong>{{ chap.name }}</strong>
+                        <div class="small text-muted">{{ chap.Description or '' }}</div>
+                      </td>
+                      <td>{{ chap.questions|length }}</td>
+                      <td class="text-end text-muted small">Assigned faculty</td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <div class="mt-4 p-3 rounded bg-light text-muted small">No chapters yet. An assigned faculty member can add chapters.</div>
+              {% endif %}
+            </div>
+          </section>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <section class="card p-5 text-center">
+        <div class="auth-brand-mark mx-auto mb-3">OE</div>
+        <h2 class="h4">No subjects yet</h2>
+        <p class="text-muted">Create a subject, promote a student to faculty, and assign the subject to begin course work.</p>
+        <div><a class="btn btn-primary" href="{{ url_for('new_subject', Admin=Admin) }}">Create your first subject</a></div>
+      </section>
+      {% endif %}
+    </div>
+
+    <!-- Tab 2: User Role Management -->
+    <div class="tab-pane fade" id="users" role="tabpanel">
+      <section class="card">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="h5 fw-bold mb-0">User Accounts & Role-Based Access Control</h2>
+            <div class="small text-muted">Student accounts are promoted here. Assign faculty access to each subject they teach.</div>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Full Name</th>
+                  <th>Username / Email</th>
+                  <th>Department / Qualification</th>
+                  <th>Current Role</th>
+                  <th>Assigned Subjects</th>
+                  <th class="text-end">Role Management</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in users %}
+                <tr>
+                  <td><strong>{{ u.Full_Name }}</strong></td>
+                  <td>{{ u.userName }}</td>
+                  <td>{{ u.Qualification or 'General' }}</td>
+                  <td>
+                    {% if u.role == 'teacher' %}
+                      <span class="badge bg-success">Faculty / Teacher</span>
+                    {% else %}
+                      <span class="badge bg-primary">Student</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if u.role == 'teacher' %}
+                    <form action="{{ url_for('assign_teacher_subjects', teacher_id=u.id) }}" method="post" class="d-flex gap-2 align-items-start">
+                      <div class="border rounded p-2" style="max-height:110px;overflow-y:auto;min-width:180px">
+                        {% for subj in subjects %}<label class="form-check small"><input class="form-check-input" type="checkbox" name="subject_ids" value="{{ subj.id }}" {% if subj.id in assigned_subject_ids[u.id] %}checked{% endif %}><span class="form-check-label">{{ subj.name }}</span></label>{% else %}<span class="small text-muted">Create a subject first.</span>{% endfor %}
+                      </div>
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                    </form>
+                    {% else %}<span class="small text-muted">Promote to faculty to assign subjects</span>{% endif %}
+                  </td>
+                  <td class="text-end">
+                    <form action="{{ url_for('toggle_user_role', user_id=u.id) }}" method="post" class="d-inline">
+                      {% if u.role == 'teacher' %}
+                        <input type="hidden" name="role" value="student">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">Demote to Student</button>
+                      {% else %}
+                        <input type="hidden" name="role" value="teacher">
+                        <button type="submit" class="btn btn-sm btn-outline-success">Promote to Faculty</button>
+                      {% endif %}
+                    </form>
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="6" class="text-center p-4 text-muted">No registered users found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div class="row g-4 mt-1">
+    <div class="col-lg-7">
+      <section class="card h-100">
+        <div class="card-header bg-white py-3"><h2 class="h5 fw-bold mb-0">Faculty exams awaiting review</h2></div>
+        <div class="list-group list-group-flush">
+          {% for exam in draft_exams %}
+          <div class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div><strong>{{ exam.remarks or ('Exam #' ~ exam.id) }}</strong><div class="small text-muted">{{ exam.chapter.subject.name }} · {{ exam.chapter.name }} · {{ exam.questions|length }} questions · {{ exam.date_of_quiz }}</div></div>
+            <form action="{{ url_for('publish_exam', quiz_id=exam.id) }}" method="post"><button class="btn btn-sm btn-success" {% if not exam.questions %}disabled title="Add questions before publishing"{% endif %}>Publish to students</button></form>
+          </div>
+          {% else %}<div class="p-4 text-muted">No draft exams are waiting for review.</div>{% endfor %}
+        </div>
+      </section>
+    </div>
+    <div class="col-lg-5">
+      <section class="card h-100">
+        <div class="card-header bg-white py-3 d-flex justify-content-between"><h2 class="h5 fw-bold mb-0">Recent governance activity</h2><a href="{{ url_for('admin_audit_logs') }}">View all</a></div>
+        <div class="list-group list-group-flush">
+          {% for entry in recent_audit_logs %}<div class="list-group-item"><strong>{{ entry.action|replace('_', ' ')|title }}</strong><div class="small text-muted">{{ entry.actor_username }} · {{ entry.created_at }}</div></div>
+          {% else %}<div class="p-4 text-muted">No governance changes recorded yet.</div>{% endfor %}
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
